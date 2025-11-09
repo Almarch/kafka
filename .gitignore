@@ -1,0 +1,5 @@
+*_checkpoints
+*.txt
+*.model
+*.vocab
+*.pt
