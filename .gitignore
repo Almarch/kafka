@@ -3,3 +3,6 @@
 *.model
 *.vocab
 *.pt
+*.log
+*.arrow
+*.json
