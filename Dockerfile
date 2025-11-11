@@ -6,7 +6,8 @@ RUN pip install \
     numpy==2.1.3 \
     sentencepiece==0.2.0 \
     tqdm==4.66.5 \
-    datasets==3.0.1
+    datasets==3.0.1 \
+    transformers==4.40.0
 
 WORKDIR /project
 
