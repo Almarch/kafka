@@ -7,7 +7,10 @@ RUN pip install \
     sentencepiece==0.2.0 \
     tqdm==4.66.5 \
     datasets==3.0.1 \
-    transformers==4.40.0
+    transformers==4.44.2 \
+    peft==0.13.2 \
+    bitsandbytes==0.44.1 \
+    accelerate==0.34.2
 
 WORKDIR /project
 
