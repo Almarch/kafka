@@ -1,4 +1,4 @@
-<img alt="le_chateau" src="https://github.com/user-attachments/assets/3bd35107-412a-45ac-8eb7-f3ea168215f6" width="275px" align="right"/>
+<img alt="le_chateau" src="https://github.com/user-attachments/assets/3bd35107-412a-45ac-8eb7-f3ea168215f6" width="350px" align="right"/>
 
 The goal of this project is to fine-tune a LLM to achieve the book of Kafka: the Castle; as the author never ended it.
 
