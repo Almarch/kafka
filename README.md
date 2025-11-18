@@ -28,13 +28,13 @@ docker run -d \
 
 ## ✨ Use
 
-The project is made of a notebook, available at [port 8000](http://localhost:8000) once the container runs, and 2 python scritps.
+The project is made of a notebook, available at [port 8000](http://localhost:8000) once the container runs, and 2 python scripts.
 
 - From the notebook, download the HF resources (the model and the literature corpus).
 - Launch the data preprocessing: `docker exec -it kafka python prepare_data.py`.
 - Make sure the VRAM is 100% available for the training (`nvtop`).
-- In a detached `screen`: Launch the training: `docker exec -it kafka python train.py`.
-- Finally, from the notebook, you can then play with the new kafkayan model.
+- In a detached `screen`, Launch the training: `docker exec -it kafka python train.py`.
+- Finally, from the notebook, you can then play with the new Kafkaesque model.
 
 <div align="center">
 <img width="500" alt="Llama" src="https://github.com/user-attachments/assets/91f06e0b-7c79-4de9-9386-8dab581f8289" />
