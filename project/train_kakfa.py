@@ -7,14 +7,18 @@ from transformers import (
     BitsAndBytesConfig
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from datasets import Dataset
 import torch
-import json
+from load_jsonl import load_jsonl
 
-model_name = "openllama_f16"
-
+model_name = "./gallica_tinyllama_bf16"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-tokenizer.pad_token = tokenizer.eos_token
+
+train_dataset = load_jsonl("train_kafka.jsonl", tokenizer, 512)
+
+data_collator = DataCollatorForLanguageModeling(
+    tokenizer=tokenizer,
+    mlm=False
+)
 
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
@@ -22,7 +26,6 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_use_double_quant=True,
     bnb_4bit_compute_dtype=torch.bfloat16
 )
-
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     quantization_config=bnb_config,
@@ -34,7 +37,7 @@ model = AutoModelForCausalLM.from_pretrained(
 model = prepare_model_for_kbit_training(model)
 
 lora_config = LoraConfig(
-    r = 32,          # rank: W_new = W_frozen + ΔW with ΔW ≈ A × B where A_{3200 × r} and B_{r × 3200} (3200 = d, hidden dimension of OpenLlama)
+    r = 32,          # rank: W_new = W_frozen + ΔW with ΔW ≈ A × B where A_{d × r} and B_{r × d} (d: hidden dimension of the base model)
     lora_alpha=32,   # scaling factor = alpha/r = 32/32 = 1.0
     target_modules=[
         "q_proj", "v_proj", "k_proj", "o_proj",  # Attention layers
@@ -48,27 +51,8 @@ lora_config = LoraConfig(
 model = get_peft_model(model, lora_config)
 model.print_trainable_parameters()
 
-def load_jsonl_dataset(path):
-    with open(path, "r", encoding="utf-8") as f:
-        texts = [json.loads(line)["text"] for line in f]
-    
-    tokens = tokenizer(
-        texts,
-        padding='max_length',
-        truncation=True,
-        max_length=512
-    )
-    tokens["labels"] = [ids.copy() for ids in tokens["input_ids"]]
-    
-    return Dataset.from_dict(tokens)
-
-data_collator = DataCollatorForLanguageModeling(
-    tokenizer=tokenizer,
-    mlm=False
-)
-
 training_args = TrainingArguments(
-    output_dir="kafka_openllama",
+    output_dir="train_kafka",
     
     # Batch & Accumulation
     per_device_train_batch_size=8,        # Real batch size per GPU => ~8Go VRAM
@@ -81,7 +65,7 @@ training_args = TrainingArguments(
     # Learning rate
     learning_rate=3e-5,                   # Max LR (will be modulated by scheduler)
     lr_scheduler_type="cosine",           # Cosine annealing: smooth decay from max to 0
-    warmup_ratio=0.05,                    # 5% of steps for warmup (prevents initial shock)
+    warmup_ratio=0.03,                    # 5% of steps for warmup (prevents initial shock)
     
     # Optimizer
     optim="paged_adamw_8bit",             # 8-bit Adam: saves ~20% VRAM vs standard Adam
@@ -107,7 +91,6 @@ training_args = TrainingArguments(
     report_to="none"                      # No WandB/TensorBoard (set "tensorboard" if needed)
 )
 
-train_dataset = load_jsonl_dataset("train.jsonl")
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -119,6 +102,6 @@ trainer = Trainer(
 trainer.train()
 
 model = model.merge_and_unload()
-final_path = "kafkallama"
+final_path = "kafka_tinyllama_bf16"
 model.save_pretrained(final_path)
 tokenizer.save_pretrained(final_path)

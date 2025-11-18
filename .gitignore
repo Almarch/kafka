@@ -8,3 +8,6 @@
 *.json
 *.safetensors
 *.jsonl
+*.Trash*
+*.pyc
+
