@@ -8,6 +8,8 @@ It is designed for a Nvidia GPU with at least 12 Go VRAM. The [Nvidia container 
 
 🚨 The base model is [OpenLlama 3B V2](https://huggingface.co/openlm-research/open_llama_3b_v2), which has been trained on NSFW material 🚨 We will try to replace this knowledge with French litteracy but some artifacts may subsist especially when testing the base model as is.
 
+The general idea is to use a QLoRA fine-tuning of the base model on Kafka - the Castle, diluted within French literature from [Project Gutenberg](https://huggingface.co/datasets/manu/project_gutenberg) for stability.
+
 🚧 This is an ongoing project 🚧
 
 ## 🐳 Launch
@@ -26,12 +28,13 @@ docker run -d \
 
 ## ✨ Use
 
-The project is made of 2 notebooks, available at [port 8000](http://localhost:8000) once the container runs. They are intended for chronological use:
+The project is made of a notebook, available at [port 8000](http://localhost:8000) once the container runs, and 2 python scritps.
 
-- [prepare_data.ipynb](project/prepare_data.ipynb) sets-up the environment.
-- [train.ipynb](project/train.ipynb) runs the fine-tuning.
-
-The general idea is to use a QLoRA fine-tuning of the base model on Kafka - Le Château, diluted within French literature from [Project Gutenberg](https://huggingface.co/datasets/manu/project_gutenberg) for stability.
+- From the notebook, download the HF resources (the model and the literature corpus).
+- Launch the data preprocessing: `docker exec -it kafka python prepare_data.py`.
+- Make sure the VRAM is 100% available for the training (`nvtop`).
+- In a detached `screen`: Launch the training: `docker exec -it kafka python train.py`.
+- Finally, from the notebook, you can then play with the new kafkayan model.
 
 <div align="center">
 <img width="500" alt="Llama" src="https://github.com/user-attachments/assets/91f06e0b-7c79-4de9-9386-8dab581f8289" />
