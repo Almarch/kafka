@@ -1,4 +1,4 @@
-*_checkpoints
+*checkpoint*
 *.txt
 *.model
 *.vocab
@@ -7,3 +7,4 @@
 *.arrow
 *.json
 *.safetensors
+*.jsonl
