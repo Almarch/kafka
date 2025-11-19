@@ -5,7 +5,7 @@ import re, json, random
 seg = 512
 stride = 256
 
-n_gallica_blocks = 50_000
+n_gallica_blocks = 200_000
 n_kafka_sets = 10
 n_gutenberg_blocks = 10_000 # ~ 55%
 
