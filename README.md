@@ -6,9 +6,9 @@ It uses the French copyleft translation of the book available [here](https://ekl
 
 It is designed for a Nvidia GPU with at least 12 Go VRAM. The [Nvidia container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) is needed.
 
-🚨 The base model is [OpenLlama 3B V2](https://huggingface.co/openlm-research/open_llama_3b_v2), which has been trained on NSFW material 🚨 We will try to replace this knowledge with French litteracy but some artifacts may subsist especially when testing the base model as is.
+The base model is [TinyLlama](https://huggingface.co/TinyLlama/TinyLlama_v1.1), a free-to-operate 1.1B model.
 
-The general idea is to use a QLoRA fine-tuning of the base model on Kafka - the Castle, diluted within French literature from [Project Gutenberg](https://huggingface.co/datasets/manu/project_gutenberg) for stability.
+The general idea is to slightly overfit the model on Kafka - the Castle, using French literature data sets ([Gallica](https://huggingface.co/datasets/PleIAs/French-PD-Books) and [Gutenberg](https://huggingface.co/datasets/manu/project_gutenberg) projects) for French language stability and vocabulary enrichment.
 
 🚧 This is an ongoing project 🚧
 
@@ -32,8 +32,9 @@ The project is made of a notebook, available at [port 8000](http://localhost:800
 
 - From the notebook, download the HF resources (the model and the literature corpus).
 - Launch the data preprocessing: `docker exec -it kafka python prepare_data.py`.
-- Make sure the VRAM is 100% available for the training (`nvtop`).
-- In a detached `screen`, Launch the training: `docker exec -it kafka python train.py`.
+- Make sure the VRAM is 100% available for the training (`nvtop`). From a detached `screen`:
+    - Launch the first training step: `docker exec -it kafka python train_gallica.py`.
+    - The the second step: `docker exec -it kafka python train_kafka.py`.
 - Finally, from the notebook, you can then play with the new Kafkaesque model.
 
 <div align="center">
