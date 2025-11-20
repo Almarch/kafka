@@ -4,88 +4,75 @@ from transformers import (
     TrainingArguments,
     Trainer,
     DataCollatorForLanguageModeling,
-    BitsAndBytesConfig
+    BitsAndBytesConfig,
 )
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-import torch
+from peft import PeftModel, prepare_model_for_kbit_training
 from load_jsonl import load_jsonl
 
-model_name = "./gallica_tinyllama_bf16"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+base_model = "./tinyllama_bf16_gallica_fullweight_1M_512t"
+lora_model = "./lora_gallica_qlora_200K_2048t"
+tokenizer = AutoTokenizer.from_pretrained("./tinyllama_bf16")
 
-train_dataset = load_jsonl("train_kafka.jsonl", tokenizer, 512)
+train_dataset = load_jsonl("3_kafka_40pc_gutenberg_2048t.jsonl", tokenizer, 2048)
 
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
     mlm=False
 )
-
 bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_use_double_quant=True,
-    bnb_4bit_compute_dtype=torch.bfloat16
+    load_in_8bit=True,
 )
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
+base_model = AutoModelForCausalLM.from_pretrained(
+    base_model,
     quantization_config=bnb_config,
     device_map="auto",
     trust_remote_code=True,
     local_files_only=True
 )
+model = PeftModel.from_pretrained(base_model, lora_model)
 
 model = prepare_model_for_kbit_training(model)
 
-lora_config = LoraConfig(
-    r = 32,          # rank: W_new = W_frozen + ΔW with ΔW ≈ A × B where A_{d × r} and B_{r × d} (d: hidden dimension of the base model)
-    lora_alpha=32,   # scaling factor = alpha/r = 32/32 = 1.0
-    target_modules=[
-        "q_proj", "v_proj", "k_proj", "o_proj",  # Attention layers
-        "gate_proj", "up_proj", "down_proj"      # MLP layers
-    ],
-    lora_dropout=0.05,    # 5% of LoRA weights randomly dropped during training (regularization)
-    bias="none",          # Don't train bias terms
-    task_type="CAUSAL_LM" # next token
-)
-
-model = get_peft_model(model, lora_config)
 model.print_trainable_parameters()
+
+model.gradient_checkpointing_enable() # trades computation time for VRAM
 
 training_args = TrainingArguments(
     output_dir="train_kafka",
     
     # Batch & Accumulation
-    per_device_train_batch_size=8,        # Real batch size per GPU => ~8Go VRAM
-    gradient_accumulation_steps=4,        # Accumulate k steps → effective batch = k * device_batch_size = 32
+    per_device_train_batch_size=1,        # Real batch size per GPU => ~8Go VRAM
+    gradient_accumulation_steps=32,       # Accumulate k steps → effective batch = k * device_batch_size = 32
     
     # Epochs control
     num_train_epochs=1,                   # 1 epoch
     max_steps=-1,                         # -1 = use num_train_epochs instead of fixed steps
     
     # Learning rate
-    learning_rate=3e-5,                   # Max LR (will be modulated by scheduler)
+    learning_rate=1e-5,                   # Max LR (will be modulated by scheduler)
     lr_scheduler_type="cosine",           # Cosine annealing: smooth decay from max to 0
-    warmup_ratio=0.03,                    # 5% of steps for warmup (prevents initial shock)
+    warmup_ratio=0.05,                    # 5% of steps for warmup (prevents initial shock)
     
     # Optimizer
     optim="paged_adamw_8bit",             # 8-bit Adam: saves ~20% VRAM vs standard Adam
     
     # Gradient clipping
-    max_grad_norm=0.3,                    # Clip gradients to prevent exploding gradients
+    max_grad_norm=1,                      # Clip gradients to prevent exploding gradients
     
     # Precision
     bf16=True,                            # Use bfloat16 (Ampere+ GPUs: A100, RTX 30xx+)
     fp16=False,                           # Don't use float16 (bf16 is better)
     
     # Logging & Checkpoints
-    logging_steps=50,                     # Print logs every 50 steps
-    save_steps=500,                       # Save checkpoint every 500 steps
+    logging_steps=10,                     # Print logs every 50 steps
+    save_steps=100,                       # Save checkpoint every 500 steps
     save_total_limit=3,                   # Keep only 3 latest checkpoints (saves disk space)
     
     # DataLoader optimizations
     dataloader_pin_memory=True,           # Faster GPU transfers (if enough RAM)
-    dataloader_num_workers=2,             # Parallel data loading (2 CPU threads)
+    dataloader_num_workers=8,             # Parallel data loading (8 CPU threads)
     remove_unused_columns=False,          # Don't auto-remove columns (we handle it manually)
+    dataloader_prefetch_factor=2,         # preloads 2 batchs / worker
     
     # Monitoring
     report_to="none"                      # No WandB/TensorBoard (set "tensorboard" if needed)
@@ -102,6 +89,6 @@ trainer = Trainer(
 trainer.train()
 
 model = model.merge_and_unload()
-final_path = "kafka_tinyllama_bf16"
+final_path = "tinykafka"
 model.save_pretrained(final_path)
 tokenizer.save_pretrained(final_path)

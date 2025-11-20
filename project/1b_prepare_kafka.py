@@ -2,66 +2,22 @@ from transformers import AutoTokenizer
 from datasets import load_from_disk
 import re, json, random
 
-seg = 512
-stride = 256
-
-n_gallica_blocks = 200_000
-n_kafka_sets = 10
-n_gutenberg_blocks = 10_000 # ~ 55%
+seg = 2048
+stride = 680 # => 3 sets
+n_gutenberg_blocks = 500 # ~ 40%
+name = "3_kafka_40pc_gutenberg_2048t"
 
 random.seed(42)
 model_name = "./tinyllama_bf16"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-### Step 1: pure gallica
-
-gallica = load_from_disk("gallica")
-
-gallica_json = []
-
-i = 0
-while i < n_gallica_blocks:
-    item = gallica[random.randint(0, len(gallica) - 1)]
-    text = item["complete_text"]
-    
-    if len(text) < seg * 6: # gallica contains very small texts
-        continue
-        
-    max_start = len(text) - seg * 6
-    char_start = random.randint(0, max_start)
-    substring = text[char_start:char_start + seg * 6]
-    tok = tokenizer.encode(substring, add_special_tokens=False)
-    
-    if len(tok) < seg:
-        continue
-    
-    start = random.randint(0, len(tok) - seg)
-    block_tokens = tok[start:start+seg]
-    decoded = tokenizer.decode(block_tokens)
-    gallica_json.append(
-        json.dumps({"text": decoded}, ensure_ascii=False)
-    )
-    i += 1
-    
-with open(f"train_gallica.jsonl", "w", encoding="utf-8") as f:
-    for line in gallica_json:
-        f.write(line + "\n")
-
-### Step 2
-
 ## Kafka resource
 
 with open("chateau.txt", "r", encoding="utf-8") as f:
     kafka = f.read()
-
-# remove page numbers
-kafka = re.sub(r"–\s*\d+\s*–\n", "", kafka)
-
-# fix split words
-kafka = re.sub(r"-\n", "", kafka)
-
-# remove line breaks
-kafka = re.sub(r'\n(?!–)', ' ', kafka)
+kafka = re.sub(r"–\s*\d+\s*–\n", "", kafka) # remove page numbers
+kafka = re.sub(r"-\n", "", kafka) # fix split words
+kafka = re.sub(r'\n(?!–)', ' ', kafka) # remove line breaks
 
 tok = tokenizer.encode(kafka, add_special_tokens=False)
 blocks = [
@@ -75,7 +31,6 @@ kafka_json = [
     json.dumps({"text": tokenizer.decode(tok_block)}, ensure_ascii=False)
     for tok_block in blocks
 ]
-kafka_json = kafka_json * n_kafka_sets
 
 ## Gutenberg resource
 
@@ -105,9 +60,8 @@ while i < n_gutenberg_blocks:
     i += 1
 
 ## Merge and save
-
 combined = kafka_json + gutenberg_json
 random.shuffle(combined)
-with open(f"train_kafka.jsonl", "w", encoding="utf-8") as f:
+with open(name + ".jsonl", "w", encoding="utf-8") as f:
     for line in combined:
         f.write(line + "\n")
