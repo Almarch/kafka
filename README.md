@@ -10,8 +10,6 @@ The base model is [TinyLlama](https://huggingface.co/TinyLlama/TinyLlama_v1.1), 
 
 The general idea is to slightly overfit the model on Kafka - the Castle, using French literature data sets ([Gallica](https://huggingface.co/datasets/PleIAs/French-PD-Books) and [Gutenberg](https://huggingface.co/datasets/manu/project_gutenberg) projects) for French language stability and vocabulary enrichment.
 
-🚧 This is an ongoing project 🚧
-
 ## 🐳 Launch
 
 Build & launch the docker container:
