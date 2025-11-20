@@ -3,8 +3,8 @@ from datasets import load_from_disk
 import re, json, random
 
 seg = 2048
-stride = 680 # => 3 sets
-n_gutenberg_blocks = 500 # ~ 40%
+stride = 680 # => 3 sets, 300 blocks
+n_gutenberg_blocks = 200 # ~ 40%
 name = "3_kafka_40pc_gutenberg_2048t"
 
 random.seed(42)
