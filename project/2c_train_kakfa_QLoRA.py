@@ -10,7 +10,7 @@ from peft import PeftModel, prepare_model_for_kbit_training
 from load_jsonl import load_jsonl
 
 base_model = "./tinyllama_bf16_gallica_fullweight_1M_512t"
-lora_model = "./lora_gallica_qlora_200K_2048t"
+lora_model = "./lora_gallica_qlora_250K_2048t"
 tokenizer = AutoTokenizer.from_pretrained("./tinyllama_bf16")
 
 datasource = "3_kafka_40pc_gutenberg_2048t.jsonl"

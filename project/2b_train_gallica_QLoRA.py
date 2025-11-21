@@ -12,7 +12,7 @@ from load_jsonl import load_jsonl
 model_name = "./tinyllama_bf16_gallica_fullweight_1M_512t"
 tokenizer = AutoTokenizer.from_pretrained("./tinyllama_bf16")
 
-datasource = "gallica_qlora_200K_2048t.jsonl"
+datasource = "gallica_qlora_250K_2048t.jsonl"
 train_dataset = load_jsonl(datasource, tokenizer, 2048)
 with open(datasource, 'rb') as f:
     n_rows = sum(1 for _ in f)
@@ -98,4 +98,4 @@ trainer = Trainer(
 
 trainer.train()
 
-model.save_pretrained("lora_gallica_qlora_200K_2048t")
+model.save_pretrained("lora_gallica_qlora_250K_2048t")
