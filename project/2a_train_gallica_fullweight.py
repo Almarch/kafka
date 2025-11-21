@@ -19,7 +19,7 @@ train_dataset = load_jsonl("gallica_fullweight_1M_512t.jsonl", tokenizer, 512)
 
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
-    mlm=False
+    mlm=False # Causal LM: labels = input_ids, padding tokens → -100
 )
 
 model.gradient_checkpointing_enable() # trades computation time for VRAM
@@ -32,9 +32,10 @@ training_args = TrainingArguments(
     gradient_accumulation_steps=8,       # Accumulate k steps → effective batch = k * device_batch_size = 32
     
     # Epochs control
-    num_train_epochs=1,                   # 1 epoch
-    max_steps=-1,                         # -1 = use num_train_epochs instead of fixed steps
-    
+    #num_train_epochs=1,                   # 1 epoch
+    #max_steps=-1,                         # -1 = use num_train_epochs instead of fixed steps
+    max_steps=-1,                          # keep going and stream the whole dataset
+
     # Learning rate
     learning_rate=1e-5,                   # Max LR (will be modulated by scheduler)
     lr_scheduler_type="cosine",           # Cosine annealing: smooth decay from max to 0

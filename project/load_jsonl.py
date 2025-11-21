@@ -1,23 +1,14 @@
-import json
-from datasets import Dataset
+from datasets import load_dataset
 
-def load_jsonl(path, tokenizer, max_length):
-    with open(path, "r", encoding="utf-8") as f:
-        texts = [json.loads(line)["text"] for line in f]
+def load_jsonl(path, tokenizer, max_length, epochs = 1):
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    
-    tokens = tokenizer(
-        texts,
-        padding='max_length',
-        truncation=True,
-        max_length=max_length
-    )
+    dataset = load_dataset("json", data_files=path, split="train", streaming=True)
 
-    tokens["labels"] = [
-        [-100 if token == tokenizer.pad_token_id else token for token in ids]  # -100: magic number
-        for ids in tokens["input_ids"]
-    ]
-        
-    return Dataset.from_dict(tokens)
+    def tokenize(examples):
+        return tokenizer(examples["text"], truncation=True, max_length=max_length)
+    
+    dataset = dataset.map(tokenize, batched=True, remove_columns=["text"])
+    dataset = dataset.repeat(epochs)
+    return dataset
