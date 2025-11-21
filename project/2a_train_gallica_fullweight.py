@@ -57,9 +57,8 @@ training_args = TrainingArguments(
     
     # DataLoader optimizations
     dataloader_pin_memory=True,           # Faster GPU transfers (if enough RAM)
-    dataloader_num_workers=8,             # Parallel data loading (8 CPU threads)
+    dataloader_num_workers=2,             # Parallel data loading (2 CPU threads)
     remove_unused_columns=False,          # Don't auto-remove columns (we handle it manually)
-    dataloader_prefetch_factor=2,         # preloads 2 batchs / worker
     
     # Monitoring
     report_to="none"                      # No WandB/TensorBoard (set "tensorboard" if needed)
