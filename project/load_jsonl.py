@@ -1,6 +1,6 @@
 from datasets import load_dataset
 
-def load_jsonl(path, tokenizer, max_length, epochs = 1):
+def load_jsonl(path, tokenizer, max_length):
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -10,5 +10,4 @@ def load_jsonl(path, tokenizer, max_length, epochs = 1):
         return tokenizer(examples["text"], truncation=True, max_length=max_length)
     
     dataset = dataset.map(tokenize, batched=True, remove_columns=["text"])
-    dataset = dataset.repeat(epochs)
     return dataset

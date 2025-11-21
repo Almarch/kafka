@@ -15,7 +15,10 @@ model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.bfloat16
 ).to("cuda")
 
-train_dataset = load_jsonl("gallica_fullweight_1M_512t.jsonl", tokenizer, 512)
+datasource = "gallica_fullweight_1M_512t.jsonl"
+train_dataset = load_jsonl(datasource, tokenizer, 512)
+with open(datasource, 'rb') as f:
+    n_rows = sum(1 for _ in f)
 
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
@@ -28,13 +31,9 @@ training_args = TrainingArguments(
     output_dir="train_gallica_fullweight",
     
     # Batch & Accumulation
-    per_device_train_batch_size=4,       # Real batch size per GPU => ~8Go VRAM
-    gradient_accumulation_steps=8,       # Accumulate k steps → effective batch = k * device_batch_size = 32
-    
-    # Epochs control
-    #num_train_epochs=1,                   # 1 epoch
-    #max_steps=-1,                         # -1 = use num_train_epochs instead of fixed steps
-    max_steps=-1,                          # keep going and stream the whole dataset
+    per_device_train_batch_size=16,       # Real batch size per GPU => ~8Go VRAM
+    gradient_accumulation_steps=2,        # Accumulate k steps → effective batch = k * device_batch_size = 32
+    max_steps=n_rows // 32,               # number of samples / number of effective batches
 
     # Learning rate
     learning_rate=1e-5,                   # Max LR (will be modulated by scheduler)
@@ -58,8 +57,8 @@ training_args = TrainingArguments(
     
     # DataLoader optimizations
     dataloader_pin_memory=True,           # Faster GPU transfers (if enough RAM)
-    dataloader_num_workers=2,             # Parallel data loading (2 CPU threads)
-    remove_unused_columns=False,          # Don't auto-remove columns (we handle it manually)
+    dataloader_num_workers=16,            # Parallel data loading (CPU threads)
+    dataloader_prefetch_factor=8,         # preload x batches per worker
     
     # Monitoring
     report_to="none"                      # No WandB/TensorBoard (set "tensorboard" if needed)
