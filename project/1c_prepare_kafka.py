@@ -1,6 +1,7 @@
 from transformers import AutoTokenizer
 from datasets import load_from_disk
 import re, json, random
+from prepare_data import prepare_data
 
 seg = 2048
 stride = 680 # => 3 sets, 300 blocks
@@ -12,7 +13,6 @@ model_name = "./tinyllama_bf16"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 ## Kafka resource
-
 with open("chateau.txt", "r", encoding="utf-8") as f:
     kafka = f.read()
 kafka = re.sub(r"–\s*\d+\s*–\n", "", kafka) # remove page numbers
@@ -33,31 +33,12 @@ kafka_json = [
 ]
 
 ## Gutenberg resource
-
-gutenberg = load_from_disk("gutenberg")
-
-gutenberg_json = []
-
-i = 0
-while i < n_gutenberg_blocks:
-    item = gutenberg[random.randint(0, len(gutenberg) - 1)]
-    text = item["text"]
-
-    max_start = len(text) - seg * 6
-    char_start = random.randint(0, max_start)
-    substring = text[char_start:char_start + seg * 6]
-    tok = tokenizer.encode(substring, add_special_tokens=False)
-    
-    if len(tok) < seg:
-        continue
-    
-    start = random.randint(0, len(tok) - seg)
-    block_tokens = tok[start:start+seg]
-    decoded = tokenizer.decode(block_tokens)
-    gutenberg_json.append(
-        json.dumps({"text": decoded}, ensure_ascii=False)
-    )
-    i += 1
+gutenberg_json = prepare_data(
+    input_path = "gutenberg",
+    seg = seg,
+    n_blocks = n_gutenberg_blocks,
+    item_name = "text",
+)
 
 ## Merge and save
 combined = kafka_json + gutenberg_json

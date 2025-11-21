@@ -35,8 +35,8 @@ model = AutoModelForCausalLM.from_pretrained(
 model = prepare_model_for_kbit_training(model)
 
 lora_config = LoraConfig(
-    r = 64,          # rank: W_new = W_frozen + ΔW with ΔW ≈ A × B where A_{d × r} and B_{r × d} (d: hidden dimension of the base model)
-    lora_alpha=64,   # scaling factor = alpha/r = 1.0
+    r = 128,          # rank: W_new = W_frozen + ΔW with ΔW ≈ A × B where A_{d × r} and B_{r × d} (d: hidden dimension of the base model)
+    lora_alpha=128,   # scaling factor = alpha/r = 1.0
     target_modules=[
         "q_proj", "v_proj", "k_proj", "o_proj",  # Attention layers
         "gate_proj", "up_proj", "down_proj"      # MLP layers
