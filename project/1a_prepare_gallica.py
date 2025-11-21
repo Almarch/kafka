@@ -11,7 +11,7 @@ for prog in [
     {   
         "name": "gallica_fullweight_1M_512t",
         "seg": 512,
-        "n_blocks": 1_000_000_000,
+        "n_blocks": 1_000_000,
     },
     {
         "name": "gallica_qlora_200K_2048t",
