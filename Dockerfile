@@ -15,7 +15,8 @@ RUN pip install --no-cache-dir \
     scipy==1.14.1 \
     jupyterlab==4.2.5 \
     ipywidgets==8.1.5 \
-    tqdm==4.67.1
+    tqdm==4.67.1 \
+    matplotlib==3.10.7
 
 WORKDIR /project
 
