@@ -9,7 +9,7 @@ It takes as input:
 
 - a free-to-operate base model: [TinyLlama](https://huggingface.co/TinyLlama/TinyLlama_v1.1), a 1.1B parameters with a 2048 tokens context window.
 - a French copyleft translation of The Castle by Kafka, available [here](https://ekladata.com/QAPtMO27HuI4V0hLEhOUd3sv0Nw/Kafka-Le-Chateau.pdf).
-- a French literature dataset: ([Gallica](https://huggingface.co/datasets/PleIAs/French-PD-Books) for French language enrichment and narrative consistency.
+- a French literature dataset: [Gallica](https://huggingface.co/datasets/PleIAs/French-PD-Books) for French language enrichment and narrative consistency.
 
 ## 🐳 Launch
 
@@ -47,7 +47,7 @@ This step aims at teaching the model long (2048 tokens) and consistent narrative
 
 ### Step 3 - Stylistic imprinting on Kafka
 
-Finally, the French litterature model is trained at the boudary of overfitting on the target book, the French translation of The Castle by Kafka. This step uses 2048 token long sequences of the book, with a stride of 512, yielding 4 shuffled "pseudo-epochs" (each token of the book is seen 4 times).
+Finally, the French litterature model and more specifically its previously pre-trained LoRA are fine-tuned on the target book: the French translation of The Castle by Kafka. This step takes as input 2048 token long sequences of the book, with a stride of 512, yielding 4 shuffled "pseudo-epochs" (each token of the book is seen 4 times).
 
 - `docker exec -it kafka python 1c_prepare_kafka.py`
 - `docker exec -it kafka python 2c_train_kakfa_QLoRA.py`
