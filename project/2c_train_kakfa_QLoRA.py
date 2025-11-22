@@ -13,7 +13,7 @@ base_model = "./tinyllama_bf16_gallica_fullweight_1M_512t"
 lora_model = "./lora_gallica_qlora_250K_2048t"
 tokenizer = AutoTokenizer.from_pretrained("./tinyllama_bf16")
 
-datasource = "3_kafka_40pc_gutenberg_2048t.jsonl"
+datasource = "kafka_2048t.jsonl"
 train_dataset = load_jsonl(datasource, tokenizer, 2048)
 with open(datasource, 'rb') as f:
     n_rows = sum(1 for _ in f)
@@ -49,7 +49,7 @@ training_args = TrainingArguments(
     max_steps=n_rows // 32,                # number of samples / number of effective batches
     
     # Learning rate
-    learning_rate=1e-5,                   # Max LR (will be modulated by scheduler)
+    learning_rate=3e-5,                   # Max LR (will be modulated by scheduler)
     lr_scheduler_type="cosine",           # Cosine annealing: smooth decay from max to 0
     warmup_ratio=0.05,                    # 5% of steps for warmup (prevents initial shock)
     

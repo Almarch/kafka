@@ -4,9 +4,8 @@ import re, json, random
 from prepare_data import prepare_data
 
 seg = 2048
-stride = 680 # => 3 sets, 300 blocks
-n_gutenberg_blocks = 200 # ~ 40%
-name = "3_kafka_40pc_gutenberg_2048t"
+stride = 512 # => 4 pseudo-epochs
+name = "kafka_2048t"
 
 random.seed(42)
 model_name = "./tinyllama_bf16"
@@ -32,17 +31,8 @@ kafka_json = [
     for tok_block in blocks
 ]
 
-## Gutenberg resource
-gutenberg_json = prepare_data(
-    input_path = "gutenberg",
-    seg = seg,
-    n_blocks = n_gutenberg_blocks,
-    item_name = "text",
-)
-
-## Merge and save
-combined = kafka_json + gutenberg_json
-random.shuffle(combined)
+## shuffle & save
+random.shuffle(kafka_json)
 with open(name + ".jsonl", "w", encoding="utf-8") as f:
-    for line in combined:
+    for line in kafka_json:
         f.write(line + "\n")
