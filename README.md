@@ -25,11 +25,17 @@ docker run -d \
   kafka
 ```
 
-The project is supported by a notebook, available at [port 8000](http://localhost:8000) once the container runs. This notebook must be used to donwload the HuggingFace resources (the model and the literature corpus), and may then be used to monotor the training and test the yielded models.
+The project is supported by a notebook, available at [port 8000](http://localhost:8000) once the container runs. This notebook may be used to monitor the training and test the models.
 
 ## ✨ Curriculum learning
 
-The curriculum of this project is presented in a logical order. However, it is also possible to prepare all data beforehands (`1a`, `1b` and `1c`) then all the training steps (`2a`, `2b` and `2c`).
+The curriculum of this project is presented in a logical order. However, it is also possible to prepare all data beforehands (`0`, then `1a`, `1b` and `1c`) then to run all the training steps (`2a`, `2b` and `2c`).
+
+### Step 0 - Resource collection
+
+This step collects the HuggingFace resources: the model, and the training dataset.
+
+- `docker exec -it kafka python 0_data_collection.py`
 
 ### Step 1 - French literature aculturation
 
