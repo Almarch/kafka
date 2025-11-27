@@ -5,6 +5,6 @@ json_out = prepare_data(
     n_blocks = 1_000_000,
 )
 
-with open("gallica_fullweight_1M_512t.jsonl", "w", encoding="utf-8") as f:
+with open("gallica_1M_512t.jsonl", "w", encoding="utf-8") as f:
     for line in json_out:
         f.write(line + "\n")

@@ -9,8 +9,8 @@ from transformers import (
 from peft import PeftModel, prepare_model_for_kbit_training
 from load_jsonl import load_jsonl
 
+lora = "./qlora_gallica_100K_2048t"
 base_model = "./tinyllama_bf16_gallica_fullweight_1M_512t"
-lora_model = "./lora_gallica_qlora_250K_2048t"
 tokenizer = AutoTokenizer.from_pretrained("./tinyllama_bf16")
 
 datasource = "kafka_2048t.jsonl"
@@ -32,7 +32,7 @@ base_model = AutoModelForCausalLM.from_pretrained(
     trust_remote_code=True,
     local_files_only=True
 )
-model = PeftModel.from_pretrained(base_model, lora_model)
+model = PeftModel.from_pretrained(base_model, lora)
 
 model = prepare_model_for_kbit_training(model)
 
@@ -41,17 +41,17 @@ model.print_trainable_parameters()
 model.gradient_checkpointing_enable() # trades computation time for VRAM
 
 training_args = TrainingArguments(
-    output_dir="train_kafka",
+    output_dir="train_kafka_qlora",
     
     # Batch & Accumulation
-    per_device_train_batch_size=1,        # Real batch size per GPU => ~8Go VRAM
-    gradient_accumulation_steps=32,       # Accumulate k steps → effective batch = k * device_batch_size = 32
+    per_device_train_batch_size=4,        # Real batch size per GPU => ~8Go VRAM
+    gradient_accumulation_steps=8,       # Accumulate k steps → effective batch = k * device_batch_size = 32
     max_steps=n_rows // 32,                # number of samples / number of effective batches
     
     # Learning rate
-    learning_rate=3e-5,                   # Max LR (will be modulated by scheduler)
+    learning_rate=5e-5,                   # Max LR (will be modulated by scheduler)
     lr_scheduler_type="cosine",           # Cosine annealing: smooth decay from max to 0
-    warmup_ratio=0.05,                    # 5% of steps for warmup (prevents initial shock)
+    warmup_ratio=0.2,                     # 5% of steps for warmup (prevents initial shock)
     
     # Optimizer
     optim="paged_adamw_8bit",             # 8-bit Adam: saves ~20% VRAM vs standard Adam
@@ -64,7 +64,7 @@ training_args = TrainingArguments(
     fp16=False,                           # Don't use float16 (bf16 is better)
     
     # Logging & Checkpoints
-    logging_steps=10,                     # Print logs every 50 steps
+    logging_steps=1,                      # Print logs every 50 steps
     save_steps=100,                       # Save checkpoint every 500 steps
     save_total_limit=3,                   # Keep only 3 latest checkpoints (saves disk space)
     

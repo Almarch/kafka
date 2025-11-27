@@ -8,11 +8,12 @@ from transformers import (
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from load_jsonl import load_jsonl
+import torch
 
 model_name = "./tinyllama_bf16_gallica_fullweight_1M_512t"
 tokenizer = AutoTokenizer.from_pretrained("./tinyllama_bf16")
 
-datasource = "gallica_qlora_250K_2048t.jsonl"
+datasource = "gallica_100K_2048t.jsonl"
 train_dataset = load_jsonl(datasource, tokenizer, 2048)
 with open(datasource, 'rb') as f:
     n_rows = sum(1 for _ in f)
@@ -21,8 +22,14 @@ data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
     mlm=False
 )
+# bnb_config = BitsAndBytesConfig(
+#     load_in_4bit=True,                      # 4-bit quantization
+#     bnb_4bit_compute_dtype=torch.bfloat16,  # Compute en bf16
+#     bnb_4bit_use_double_quant=True,         # Nested quantization
+#     bnb_4bit_quant_type="nf4"               # NormalFloat4
+# )
 bnb_config = BitsAndBytesConfig(
-    load_in_8bit=True,
+    load_in_8bit=True
 )
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
@@ -35,8 +42,8 @@ model = AutoModelForCausalLM.from_pretrained(
 model = prepare_model_for_kbit_training(model)
 
 lora_config = LoraConfig(
-    r = 128,          # rank: W_new = W_frozen + ΔW with ΔW ≈ A × B where A_{d × r} and B_{r × d} (d: hidden dimension of the base model)
-    lora_alpha=128,   # scaling factor = alpha/r = 1.0
+    r = 16,          # rank: W_new = W_frozen + ΔW with ΔW ≈ A × B where A_{d × r} and B_{r × d} (d: hidden dimension of the base model)
+    lora_alpha=16,   # scaling factor = alpha/r = 1.0
     target_modules=[
         "q_proj", "v_proj", "k_proj", "o_proj",  # Attention layers
         "gate_proj", "up_proj", "down_proj"      # MLP layers
@@ -52,17 +59,17 @@ model.print_trainable_parameters()
 model.gradient_checkpointing_enable() # trades computation time for VRAM
 
 training_args = TrainingArguments(
-    output_dir="train_kafka",
+    output_dir="train_gallica_qlora",
     
     # Batch & Accumulation
-    per_device_train_batch_size=1,        # Real batch size per GPU => ~8Go VRAM
-    gradient_accumulation_steps=32,       # Accumulate k steps → effective batch = k * device_batch_size = 32
-    max_steps=n_rows // 32,                # number of samples / number of effective batches
+    per_device_train_batch_size=4,        # Real batch size per GPU => ~8Go VRAM
+    gradient_accumulation_steps=8,        # Accumulate k steps → effective batch = k * device_batch_size = 32
+    max_steps=n_rows // 32,               # number of samples / number of effective batches
     
     # Learning rate
     learning_rate=1e-5,                   # Max LR (will be modulated by scheduler)
     lr_scheduler_type="cosine",           # Cosine annealing: smooth decay from max to 0
-    warmup_ratio=0.10,                    # 5% of steps for warmup (prevents initial shock)
+    warmup_ratio=0.20,                    # 20% of steps for warmup (prevents initial shock)
     
     # Optimizer
     optim="paged_adamw_8bit",             # 8-bit Adam: saves ~20% VRAM vs standard Adam
@@ -98,4 +105,4 @@ trainer = Trainer(
 
 trainer.train()
 
-model.save_pretrained("lora_gallica_qlora_250K_2048t")
+model.save_pretrained("qlora_gallica_100K_2048t")

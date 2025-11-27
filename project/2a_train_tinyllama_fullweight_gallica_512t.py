@@ -8,14 +8,13 @@ from transformers import (
 import torch
 from load_jsonl import load_jsonl
 
-model_name = "./tinyllama_bf16"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained("./tinyllama_bf16")
 model = AutoModelForCausalLM.from_pretrained(
-    model_name,
+    "./tinyllama_bf16",
     torch_dtype=torch.bfloat16
 ).to("cuda")
 
-datasource = "gallica_fullweight_1M_512t.jsonl"
+datasource = "gallica_1M_512t.jsonl"
 train_dataset = load_jsonl(datasource, tokenizer, 512)
 with open(datasource, 'rb') as f:
     n_rows = sum(1 for _ in f)
