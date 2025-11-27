@@ -1,6 +1,8 @@
 # Kafka-trained LLM
 <img alt="le_chateau" src="https://github.com/user-attachments/assets/3bd35107-412a-45ac-8eb7-f3ea168215f6" width="350px" align="right"/>
 
+## 🚧 this project is a work in progress 🚧
+
 The goal of this project is to fine-tune a LLM to continue Kafka's novel: the Castle, as the author never ended it. It is designed such as French <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Flag_of_France.svg" alt="fr" width="20"/> is the model language.
 
 It is designed for a Nvidia GPU with at least 12 Go VRAM. The [Nvidia container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) is needed. A minimal 32Go RAM is safe for the data preparation step.
