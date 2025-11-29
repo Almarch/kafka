@@ -266,11 +266,11 @@ In the last days of December, old people are said to be very merry; for it is sw
 
 The French literary aculturation (step 1) was very effective. The model completely switched its register, using a highly elevated language register and a specific vocabulary of the French XIXth literature. The number of training samples could have been shortened, as the loss stagnated for more than half the training.
 
-Step 2 and 3 were disappointing. For step 2, either the undertaken QLoRA approach was not effective with this configuration, either the longer attention was not degraded at step 1, in any case no sustantial gain was observed at step 2. Step 3 was clearly not daring enough:  loss variations were erratic, and the model failed to generate Castle-related content.
+Step 2 and 3 were disappointing. For step 2, either the undertaken QLoRA approach was not effective with this configuration, either the longer attention was not degraded at step 1, in any case no sustantial gain was observed. Step 3 was clearly not daring enough:  loss variations were erratic, and the model failed to generate Castle-related content.
 
 ## 🧪 Experiment 2 - Full-weight fine-tuning after aculturation
 
-Given the failure of the QLoRA approach, we attempted a full-weight training directly on Kafka. In this second experiment, the model from Experiment 1 - Step 1, *i.e.* the French literary aculturated model, was directly trained on the target book.
+Given the failure of the QLoRA approach, a full-weight training was directly attempted on the target book. The model from experiment 1 - Step 1, *i.e.* the French literary aculturated model, was taken as the base model for this second experiment.
 
 The training on The Castle was more aggressive: it was split into 512 tokens chunks, shuffled, and used as training material along 10 epochs. The goal of this step is to play with the edge of overfitting, in other words, to deeply imprint the target book without yielding a perfect recitation.
 
