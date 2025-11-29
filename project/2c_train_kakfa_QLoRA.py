@@ -46,7 +46,7 @@ training_args = TrainingArguments(
     # Batch & Accumulation
     per_device_train_batch_size=4,        # Real batch size per GPU => ~8Go VRAM
     gradient_accumulation_steps=8,       # Accumulate k steps → effective batch = k * device_batch_size = 32
-    max_steps=n_rows // 32,                # number of samples / number of effective batches
+    num_train_epochs = 1,
     
     # Learning rate
     learning_rate=5e-5,                   # Max LR (will be modulated by scheduler)

@@ -16,8 +16,6 @@ model = AutoModelForCausalLM.from_pretrained(
 
 datasource = "kafka_512t.jsonl"
 train_dataset = load_jsonl(datasource, tokenizer, 512)
-with open(datasource, 'rb') as f:
-    n_rows = sum(1 for _ in f)
 
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
@@ -32,11 +30,10 @@ training_args = TrainingArguments(
     # Batch & Accumulation
     per_device_train_batch_size=8,       # Real batch size per GPU => ~8Go VRAM
     gradient_accumulation_steps=1,       # Accumulate k steps → effective batch = k * device_batch_size = 32
-    num_train_epochs = 20,               # number of epochs
-    max_steps= 20 * n_rows // 8,
+    num_train_epochs = 10,               # number of epochs
 
     # Learning rate
-    learning_rate=5e-5,                   # Max LR (will be modulated by scheduler)
+    learning_rate=3e-5,                   # Max LR (will be modulated by scheduler)
     lr_scheduler_type="cosine",           # Cosine annealing: smooth decay from max to 0
     warmup_ratio=0.20,                    # 20% of steps for warmup (prevents initial shock)
     
@@ -51,7 +48,7 @@ training_args = TrainingArguments(
     fp16=False,                           # Don't use float16
     
     # Logging & Checkpoints
-    logging_steps=1,                      # Print logs every 50 steps
+    logging_steps=10,                      # Print logs every 10 steps
     save_steps=100,                       # Save checkpoint every 500 steps
     save_total_limit=3,                   # Keep only 3 latest checkpoints (saves disk space)
     
