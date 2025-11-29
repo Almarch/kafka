@@ -1,7 +1,5 @@
 # Kafka-trained LLM
 
-## ⚗️ this is an experimental project
-
 <img alt="Llama" src="https://github.com/user-attachments/assets/91f06e0b-7c79-4de9-9386-8dab581f8289" width="400px" align="right"/>
 
 The goal of this project is to fine-tune a LLM on French litterature, and especially to imprint it with a single book which is the French translation of Kafka's novel: the Castle. The author never ended this book, so the idea is to prolongate it with new chapters.
@@ -36,7 +34,7 @@ The project is supported by a notebook, available at [port 8000](http://localhos
 
 This step collects the HuggingFace resources: the model, and the training dataset.
 
-- `docker exec -it kafka python 0_prepare_data.py`
+- `docker exec -it kafka python 0_data_collection.py`
 
 A text sample generated from TinyLlama is provided. The initial prompt will always be the same: `K. ouvrit la porte.` (*K. opened the door.*), and the model used is always q8-quantized. 500 tokens are generated with a temperature of `0.8`, a repetition penalty of `1.1` and top-p of `0.9`. An English translation has been provided using ChatGPT, asking for close translation including errors and inconsistencies.
 
@@ -266,6 +264,41 @@ In the last days of December, old people are said to be very merry; for it is sw
 
 ### 📊 Conclusions
 
-## 🧪 Experiment 2
+The French literary aculturation (step 1) was very effective. The model completely switched its register, using a highly elevated language register and a specific vocabulary of the French XIXth literature. The number of training samples could have been shortened, as the loss stagnated for more than half the training.
 
+Step 2 and 3 were disappointing. For step 2, either the undertaken QLoRA approach was not effective with this configuration, either the longer attention was not degraded at step 1, in any case no sustantial gain was observed at step 2. Step 3 was clearly not daring enough:  loss variations were erratic, and the model failed to generate Castle-related content.
 
+## 🧪 Experiment 2 - Full-weight fine-tuning after aculturation
+
+Given the failure of QLoRA approaches, we attempted full-weight training directly on Kafka. In this second experiment, the model from Experiment 1 - Step 1, *i.e.* the French literary aculturated model, was directly trained on the target book.
+
+The training on The Castle was more aggressive: it was split into 512 tokens chunks, shuffled, and used as training material along 10 epochs. The goal of this step is to play with the edge of overfitting, in other words, to deeply imprint the target book without yielding a perfect recitation.
+
+- `docker exec -it kafka python 1d_prepare_kafka_512t.py`
+- `docker exec -it kafka python 2d_train_kafka_fullweight_512t.py`
+
+<div align="center">
+<img width="500" alt="plot_train_kafka" src="https://github.com/user-attachments/assets/8303429f-cd22-4b83-afc0-087fe3c84990" />
+</div>
+
+<details><summary>🇫🇷</summary>
+
+```txt
+– Monsieur l’Arpenteur ? demanda-t-il en se penchant à petits coups dans le lit, sans même toucher K., mais sans pouvoir s’empêcher d’en tirailler les cheveux. Dans quel monde ? Quand je vous vois encore si malade, quand je vous retrouve au milieu de cette nuit froide et vide, quand j’entends entendre mes messieurs, qui sont tous là-bas, discuter de moi comme ils eussent discuté de vous – ils n’ont pas oublié votre place, mais ils ont fait un gros geste pour ne pas te la lui remettre ! –, quand je vous vois ainsi, même si tu n’étais plus capable de rien faire, il est donc impossible que tu me rendes compte qu’un tel châtiment ait été fait pour toi. Il ne suffit pas de n’être pas le premier des gens, il faut aussi d’être digne d’y être. Je vous ai pris pour un valet de chambre, je n’ai jamais osé croire qu’on m’eût cru capable d’un pareil travail ; c’est ce que je disais autrefois même aux gens qui voulaient m’embaucher, mais maintenant je sais que je vous ai pris pour un valet de chambre, vous avez seulement manqué de qualités nécessaires à cet emploi. Vous n’avez pas su rester longtemps dans une pièce où on commençait par vous mettre à nu, vous n’aviez pas la seule force de le faire. C’est au fond du moins ma faute, car, quand j’ai appris vos défauts, je vous ai mis dans la cour du château et j’ai fait tout mon possible pour ne pas vous voir. Mais cela ne suffit pas, et il ne peut être question que d’une chose plus grande : je suis méchante avec vous, je vous traite mal, je ne puis me trouver à ta place et n’ai aucun désir de devenir celle-là. Tu es donc reparti ?
+– Oui, dit K. en regardant devant lui.
+– Étrange jeune homme, dit Olga, je l’
+```
+</details>
+
+<details><summary>🇬🇧</summary>
+
+```txt
+– “Land-Surveyor, sir?” he asked, leaning in little dips over the bed, without even touching K., yet unable to stop tugging at his hair. “In what world? When I still see you so sick, when I find you again in the middle of this cold and empty night, when I hear my gentlemen, who are all down there, discussing me as they would have discussed you—they haven’t forgotten your place, but they made a big gesture not to give it back to him!—when I see you like this, even if you were no longer capable of doing anything, how is it possible you cannot explain to me that such a punishment was done for you. It isn’t enough not to be the first of people, you must also be worthy of being among them. I took you for a valet, I never dared believe one could have thought me capable of such a piece of work; that is what I used to tell even to people who wanted to hire me, but now I know I took you for a valet, you merely lacked the qualities necessary for that position. You didn’t know how to stay long in a room where they began by stripping you naked, you didn’t have the slightest strength to do it. It is, at bottom, my fault at least, for when I learned your shortcomings, I put you in the castle’s courtyard and did everything in my power not to see you. But that isn’t enough, and there can be talk only of something greater: I am wicked with you, I treat you badly, I cannot put myself in your place and have no desire to become that. So you have gone away again?”
+– “Yes,” said K., staring ahead of him.
+– “Strange young man,” said Olga, “I…”
+```
+</details>
+
+### 📊 Conclusions
+
+This second experiment was clearly more convincing: the characters and vocabulary are recurrently taken from The Castle, and the phrasing is much more Kafkaesque. We stopped at 10 epoch but the loss kept decreasing; there is a gradient of imprinting that may be played with, from zero to pure memorization of the book. 10 epochs likely crosses into the audacious zone, the narrative thread is a bit disjointed and the model sometimes goes off the rails, for instance starting to declaim theatre.
