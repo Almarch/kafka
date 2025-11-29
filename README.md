@@ -270,7 +270,7 @@ Step 2 and 3 were disappointing. For step 2, either the undertaken QLoRA approac
 
 ## 🧪 Experiment 2 - Full-weight fine-tuning after aculturation
 
-Given the failure of QLoRA approaches, we attempted full-weight training directly on Kafka. In this second experiment, the model from Experiment 1 - Step 1, *i.e.* the French literary aculturated model, was directly trained on the target book.
+Given the failure of the QLoRA approach, we attempted a full-weight training directly on Kafka. In this second experiment, the model from Experiment 1 - Step 1, *i.e.* the French literary aculturated model, was directly trained on the target book.
 
 The training on The Castle was more aggressive: it was split into 512 tokens chunks, shuffled, and used as training material along 10 epochs. The goal of this step is to play with the edge of overfitting, in other words, to deeply imprint the target book without yielding a perfect recitation.
 
