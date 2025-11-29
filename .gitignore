@@ -11,4 +11,4 @@
 *.Trash*
 *.pyc
 *.jpg
-
+**/*/README.md
