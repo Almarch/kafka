@@ -40,7 +40,7 @@ This step collects the HuggingFace resources: the model, and the training datase
 
 - `docker exec -it kafka python 0_prepare_data.py`
 
-This is a sample from the raw model on a simple prompt. The initial prompt will always be the same: `K. ouvrit la porte.` (*K. opened the door.*), and the model used is always q8-quantized. 500 tokens are generated, and an English translation has been provided using ChatGPT (asking for close translation including errors and inconsistencies):
+A text sample generated from TinyLlama is provided. The initial prompt will always be the same: `K. ouvrit la porte.` (*K. opened the door.*), and the model used is always q8-quantized. 500 tokens are generated with a temperature of `0.8`, a repetition penalty of `1.1` and top-p of `0.9`. An English translation has been provided using ChatGPT, asking for close translation including errors and inconsistencies.
 
 <details><summary>🇫🇷</summary>
 
@@ -111,7 +111,7 @@ The goal of this step is to reorient the base model towards a generator of Frenc
 <img width="500" alt="plot_train_fullweight" src="https://github.com/user-attachments/assets/3fa3ba32-f0e2-47e2-ad92-eb662e9128dd" />
 </div>
 
-Text sample:
+Generation sample at this step (same parameterization than step 1):
 
 <details> <summary>🇫🇷</summary>
   
@@ -167,7 +167,7 @@ This step aims at teaching the model long (2048 tokens) and consistent narrative
 <img width="500" alt="plot_train_qlora" src="https://github.com/user-attachments/assets/22440696-fd6e-494e-a348-ce4deefda5c6" />
 </div>
 
-Text sample:
+Generation sample at this step (same parameterization than step 1):
 
 <details> <summary>🇫🇷</summary>
   
@@ -242,7 +242,7 @@ Finally, the French litterature model and more specifically its previously pre-t
 <img width="500" alt="plot_train_kafka" src="https://github.com/user-attachments/assets/4338ce8e-8a25-4e49-9a3e-ab97f205c07e" />
 </div>
 
-Text sample:
+Generation sample at this step (same parameterization than step 1):
 
 <details><summary>🇫🇷</summary>
 
