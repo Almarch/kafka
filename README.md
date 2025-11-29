@@ -32,8 +32,6 @@ The project is supported by a notebook, available at [port 8000](http://localhos
 
 ## 🧪 Experiment 1
 
-The curriculum of this project is presented in a logical order. However, it is also possible to prepare all data beforehands (`0`, then `1a`, `1b` and `1c`) then to run all the training steps (`2a`, `2b` and `2c`).
-
 ### Step 1 - Resource collection
 
 This step collects the HuggingFace resources: the model, and the training dataset.
@@ -158,7 +156,7 @@ This question was enigmatic; it was not in Mr.
 
 ### Step 3 - Strengthen the narrative arc
 
-This step aims at teaching the model long (2048 tokens) and consistent narrative arcs, which is essential for a literature project. However, because the VRAM need increases quadratically with the context window, a QLoRA approach is undertaken from this step (and for the next one). LoRA adapters are trained over 250M samples of 2048, still from the Gallica collection. At the end ot this step, the model has seen 1B tokens of French literature.
+This step aims at teaching the model long (2048 tokens) and consistent narrative arcs, which is essential for a literature project. However, because the VRAM need increases quadratically with the context window, a QLoRA approach is undertaken from this step (and for the next one). LoRA adapters are trained over 100M samples of 2048, still from the Gallica collection.
 
 - `docker exec -it kafka python 1b_prepare_gallica_100K_2048t.py`
 - `docker exec -it kafka python 2b_train_gallica_2048t_QLoRA.py`
@@ -265,6 +263,8 @@ It was my uncle’s house, who had died about a year ago. I was the first beside
 In the last days of December, old people are said to be very merry; for it is sweeter to live with someone else’s happiness than with one’s own. We had to pull ourselves together that day, and we had taken refuge at one of my friends’, whom we called with our own eyes Mister Curé. That was the last evening of my presence here, and I came to Paris to make my journey. Some time after, my uncle and our friend having returned to their post, they did some things while talking together. After having taken something to drink, they went to the church. Barely had they left this town and these lands, when they caught the fever. I had had the misfortune of seeing my uncle ill, but I was so weak that at the moment when he was very ill, I thought…
 ```
 </details>
+
+### 📊 Conclusions
 
 ## 🧪 Experiment 2
 
