@@ -264,7 +264,7 @@ In the last days of December, old people are said to be very merry; for it is sw
 
 ### 📊 Conclusions
 
-The French literary aculturation (step 1) was very effective. The model completely switched its register, using a highly elevated language register and a specific vocabulary of the French XIXth literature. The number of training samples could have been shortened, as the loss stagnated for more than half the epoch. A lower learning rate might have enabled more gradual learning throughout the full dataset.
+The French literary aculturation (step 1) was very effective. The model completely switched its register, using a highly elevated language register and a specific vocabulary of the French classic literature. The number of training samples could have been shortened, as the loss stagnated for more than half of the epoch. A lower learning rate might have enabled more gradual learning throughout the full dataset.
 
 Step 2 and 3 were disappointing. For step 2, either the undertaken QLoRA approach was not effective with this configuration, either the longer attention was not degraded at step 1, in any case no sustantial gain was observed. Step 3 was clearly not daring enough:  loss variations were erratic, and the model failed to generate Castle-related content.
 
