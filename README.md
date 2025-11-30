@@ -28,15 +28,23 @@ docker run -d \
 
 The project is supported by a notebook, available at [port 8000](http://localhost:8000) once the container runs. This notebook may be used to monitor the training and test the models.
 
-## 🧪 Experiment 1
+## 🤗 Resources collection
 
-### Step 1 - Resource collection
-
-This step collects the HuggingFace resources: the model, and the training dataset.
+All the HuggingFace resources are downloaded for local training & use.
 
 - `docker exec -it kafka python 0_data_collection.py`
 
-A text sample generated from TinyLlama is provided. The initial prompt will always be the same: `K. ouvrit la porte.` (*K. opened the door.*), and the model used is always q8-quantized. 500 tokens are generated with a temperature of `0.8`, a repetition penalty of `1.1` and top-p of `0.9`. An English translation has been provided using ChatGPT, asking for close translation including errors and inconsistencies.
+## 🪶 Model testing
+
+All models generation samples presented in this documentation are obtained using the same process:
+
+- The initial prompt is: `K. ouvrit la porte.` (*K. opened the door.*).
+- The model used q8-quantized. If there are LoRA weights, it is first merged, saved and re-loaded in q8.
+- 500 tokens are generated.
+- The parameters are a temperature of `0.8`, a repetition penalty of `1.1` and top-p of `0.9`.
+- An English translation is provided using ChatGPT, asking for close translation including errors and inconsistencies.
+
+### 🦙 TinyLlama Test
 
 <details><summary>🇫🇷</summary>
 
@@ -96,7 +104,9 @@ Chatillon was welcomed by an entire crowd that would at last admit his beauty an
 ```
 </details>
 
-### Step 2 - French literature aculturation
+## 🧪 Experiment 1 - Interleave of full-weight and QLoRA steps
+
+### Step 1 - French literature aculturation
 
 The goal of this step is to reorient the base model towards a generator of French literature. It consists in a full-weight training over 1M samples of 512 tokens from the Gallica collection. The model should forget its chatbot abilities, its multilinguism and its coding knowledge; to learn about *boudoir intrigues* and French classical literature content and form.
 
@@ -152,7 +162,7 @@ This question was enigmatic; it was not in Mr.
 ```
 </details>
 
-### Step 3 - Strengthen the narrative arc
+### Step 2 - Strengthen the narrative arc
 
 This step aims at teaching the model long (2048 tokens) and consistent narrative arcs, which is essential for a literature project. However, because the VRAM need increases quadratically with the context window, a QLoRA approach is undertaken from this step (and for the next one). LoRA adapters are trained over 100M samples of 2048, still from the Gallica collection.
 
@@ -227,7 +237,7 @@ If I did not keep my eyes on the show, and if it were just the acting, I would b
 ```
 </details>
 
-### Step 4 - Stylistic imprinting on Kafka
+### Step 3 - Stylistic imprinting on Kafka
 
 Finally, the French litterature model and more specifically its previously pre-trained LoRA are fine-tuned on the target book: the French translation of The Castle by Kafka. This step takes as input 2048 token long sequences of the book, with a stride of 512, yielding 4 shuffled "pseudo-epochs" (each token of the book is seen 4 times).
 
@@ -268,7 +278,7 @@ The French literary aculturation (step 1) was very effective. The model complete
 
 Step 2 and 3 were disappointing. For step 2, either the undertaken QLoRA approach was not effective with this configuration, either the longer attention was not degraded at step 1, in any case no sustantial gain was observed. Step 3 was clearly not daring enough:  loss variations were erratic, and the model failed to generate Castle-related content.
 
-## 🧪 Experiment 2 - Full-weight fine-tuning after aculturation
+## 🧪 Experiment 2 - Full-weight all the way
 
 Given the failure of the QLoRA approach, a full-weight training was directly attempted on the target book. The model from experiment 1 - Step 1, *i.e.* the French literary aculturated model, was taken as the base model for this second experiment.
 
