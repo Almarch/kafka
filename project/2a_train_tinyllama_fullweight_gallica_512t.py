@@ -16,8 +16,6 @@ model = AutoModelForCausalLM.from_pretrained(
 
 datasource = "gallica_1M_512t.jsonl"
 train_dataset = load_jsonl(datasource, tokenizer, 512)
-with open(datasource, 'rb') as f:
-    n_rows = sum(1 for _ in f)
 
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
