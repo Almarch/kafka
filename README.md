@@ -8,9 +8,11 @@ It is designed for a Nvidia GPU with at least 12 Go VRAM. The [Nvidia container 
 
 It takes as input:
 
-- a free-to-operate base model: [TinyLlama](https://huggingface.co/TinyLlama/TinyLlama_v1.1), a 1.1B parameters with a 2048 tokens context window.
-- a French copyleft translation of The Castle by Kafka, available [here](https://ekladata.com/QAPtMO27HuI4V0hLEhOUd3sv0Nw/Kafka-Le-Chateau.pdf).
-- a French literature dataset: [Gallica](https://huggingface.co/datasets/PleIAs/French-PD-Books) for French language enrichment and narrative consistency.
+- Free-to-operate base models:
+  - [TinyLlama](https://huggingface.co/TinyLlama/TinyLlama_v1.1), a 1.1B parameters with a 2048 tokens context window.
+  - [Mistral](https://huggingface.co/mistralai/Mistral-7B-v0.1), a 7B parameters with a 8192 tokens context window.
+- A French literature dataset: [Gallica](https://huggingface.co/datasets/PleIAs/French-PD-Books) for French language enrichment and narrative consistency.
+- A French copyleft translation of The Castle by Kafka, available [here](https://ekladata.com/QAPtMO27HuI4V0hLEhOUd3sv0Nw/Kafka-Le-Chateau.pdf).
 
 ## 🐳 Launch
 
@@ -28,15 +30,23 @@ docker run -d \
 
 The project is supported by a notebook, available at [port 8000](http://localhost:8000) once the container runs. This notebook may be used to monitor the training and test the models.
 
-## 🧪 Experiment 1
+## 🤗 Resources collection
 
-### Step 1 - Resource collection
-
-This step collects the HuggingFace resources: the model, and the training dataset.
+All the HuggingFace resources are downloaded for local training & use.
 
 - `docker exec -it kafka python 0_data_collection.py`
 
-A text sample generated from TinyLlama is provided. The initial prompt will always be the same: `K. ouvrit la porte.` (*K. opened the door.*), and the model used is always q8-quantized. 500 tokens are generated with a temperature of `0.8`, a repetition penalty of `1.1` and top-p of `0.9`. An English translation has been provided using ChatGPT, asking for close translation including errors and inconsistencies.
+## 🪶 Model testing
+
+All models generation samples presented in this documentation are obtained using the same process:
+
+- The initial prompt is: `K. ouvrit la porte.` (*K. opened the door.*).
+- The model used q8-quantized. If there are LoRA weights, it is first merged, saved and re-loaded in q8.
+- 500 tokens are generated.
+- The parameters are a temperature of `0.8`, a repetition penalty of `1.1` and top-p of `0.9`.
+- An English translation is provided using ChatGPT, asking for close translation including errors and inconsistencies.
+
+### 🦙 TinyLlama Test
 
 <details><summary>🇫🇷</summary>
 
@@ -96,7 +106,66 @@ Chatillon was welcomed by an entire crowd that would at last admit his beauty an
 ```
 </details>
 
-### Step 2 - French literature aculturation
+### 🐈 Mistral Test
+
+<details><summary>🇫🇷</summary>
+
+```txt
+C. acheta un livre.
+D. acheta des cadeaux pour sa mère.
+E. acheta une bouteille de whisky.
+F. acheta des friandises pour son fils.
+G. sortit de l'épicerie.
+H. revint à son appartement.
+I. s'apprêtait à cuisiner le repas.
+J. commença à faire un déjeuner sur le gazon.
+K. prépara les assiettes.
+L. acheta du pain, des tomates et du fromage.
+M. alluma la barbecue.
+N. alluma le gril.
+O. posa le plat au centre de la table.
+P. servi des couverts aux invités.
+Q. plaça des vases de fleurs sur la table.
+R. plaça des couvertures sur les chaises.
+S. alluma les bougies.
+T. monta la musique.
+U. donna l'ordre d'aller prendre leur place.
+V. se mit à mangeur.
+W. mangèrent en paix.
+```
+</details>
+
+<details><summary>🇬🇧</summary>
+  
+```txt
+C. bought a book.
+D. bought some gifts for his mother.
+E. bought a bottle of whisky.
+F. bought some treats for his son.
+G. went out of the grocery store.
+H. returned to his apartment.
+I. was getting ready to cook the meal.
+J. began to make a lunch on the grass.
+K. prepared the plates.
+L. bought bread, tomatoes and cheese.
+M. lit the barbecue.
+N. lit the grill.
+O. set the dish in the middle of the table.
+P. served cutlery to the guests.
+Q. placed flower vases on the table.
+R. placed blankets on the chairs.
+S. lit the candles.
+T. turned up the music.
+U. gave the order for them to go take their seats.
+V. began to eater.
+W. ate in peace.
+```
+</details>
+
+
+## 🧪 Experiment 1 - Interleave of full-weight and QLoRA steps
+
+### Step 1 - French literature aculturation
 
 The goal of this step is to reorient the base model towards a generator of French literature. It consists in a full-weight training over 1M samples of 512 tokens from the Gallica collection. The model should forget its chatbot abilities, its multilinguism and its coding knowledge; to learn about *boudoir intrigues* and French classical literature content and form.
 
@@ -152,9 +221,9 @@ This question was enigmatic; it was not in Mr.
 ```
 </details>
 
-### Step 3 - Strengthen the narrative arc
+### Step 2 - Strengthen the narrative arc
 
-This step aims at teaching the model long (2048 tokens) and consistent narrative arcs, which is essential for a literature project. However, because the VRAM need increases quadratically with the context window, a QLoRA approach is undertaken from this step (and for the next one). LoRA adapters are trained over 100M samples of 2048, still from the Gallica collection.
+This step aims at teaching the model long (2048 tokens) and consistent narrative arcs, which is essential for a literature project. However, because the VRAM need increases quadratically with the context window, a QLoRA approach is undertaken from this step (and for the next one). Quantization was q8 and the LoRA adapters rank was `r = 16`. LoRA adapters are trained over 100M samples of 2048, still from the Gallica collection.
 
 - `docker exec -it kafka python 1b_prepare_gallica_100K_2048t.py`
 - `docker exec -it kafka python 2b_train_gallica_2048t_QLoRA.py`
@@ -227,7 +296,7 @@ If I did not keep my eyes on the show, and if it were just the acting, I would b
 ```
 </details>
 
-### Step 4 - Stylistic imprinting on Kafka
+### Step 3 - Stylistic imprinting on Kafka
 
 Finally, the French litterature model and more specifically its previously pre-trained LoRA are fine-tuned on the target book: the French translation of The Castle by Kafka. This step takes as input 2048 token long sequences of the book, with a stride of 512, yielding 4 shuffled "pseudo-epochs" (each token of the book is seen 4 times).
 
@@ -264,13 +333,13 @@ In the last days of December, old people are said to be very merry; for it is sw
 
 ### 📊 Conclusions
 
-The French literary aculturation (step 1) was very effective. The model completely switched its register, using a highly elevated language register and a specific vocabulary of the French XIXth literature. The number of training samples could have been shortened, as the loss stagnated for more than half the training.
+The French literary aculturation (step 1) was very effective. The model completely switched its register, using a highly elevated language register and a specific vocabulary of the French classic literature. The number of training samples could have been shortened, as the loss stagnated for more than half of the epoch. Alternatively, a lower learning rate might have enabled more gradual learning throughout the full dataset.
 
-Step 2 and 3 were disappointing. For step 2, either the undertaken QLoRA approach was not effective with this configuration, either the longer attention was not degraded at step 1, in any case no sustantial gain was observed at step 2. Step 3 was clearly not daring enough:  loss variations were erratic, and the model failed to generate Castle-related content.
+Step 2 and 3 were disappointing. For step 2, either the undertaken QLoRA approach was not effective with this configuration, either the longer attention was not degraded at step 1, in any case no sustantial gain was observed. Step 3 was clearly not daring enough:  loss variations were erratic, and the model failed to generate Castle-related content.
 
-## 🧪 Experiment 2 - Full-weight fine-tuning after aculturation
+## 🧪 Experiment 2 - Full-weight all the way
 
-Given the failure of QLoRA approaches, we attempted full-weight training directly on Kafka. In this second experiment, the model from Experiment 1 - Step 1, *i.e.* the French literary aculturated model, was directly trained on the target book.
+Given the failure of the QLoRA approach, a full-weight training was directly attempted on the target book. The model from experiment 1 - Step 1, *i.e.* the French literary aculturated model, was taken as the base model for this second experiment.
 
 The training on The Castle was more aggressive: it was split into 512 tokens chunks, shuffled, and used as training material along 10 epochs. The goal of this step is to play with the edge of overfitting, in other words, to deeply imprint the target book without yielding a perfect recitation.
 
@@ -302,3 +371,125 @@ The training on The Castle was more aggressive: it was split into 512 tokens chu
 ### 📊 Conclusions
 
 This second experiment was clearly more convincing: the characters and vocabulary are recurrently taken from The Castle, and the phrasing is much more Kafkaesque. We stopped at 10 epoch but the loss kept decreasing; there is a gradient of imprinting that may be played with, from zero to pure memorization of the book. 10 epochs likely crosses into the audacious zone, the narrative thread is a bit disjointed and the model sometimes goes off the rails, for instance starting to declaim theatre.
+
+## 🧪 Experiment 3
+ 
+The purpose of this third experiment is to apply the curriculum learning on a larger model: Mistral is about 7 times bigger than TinyLlama. Because of VRAM constraints, this experiment is necesarily performed with QLoRA and a q4 quantization. The LoRA adapters rank was `r = 16`. The context length was limited to 512 tokens still for the VRAM constraint.
+
+### Step 1 - French literature aculturation
+
+After quantization, the LoRA adapters were trained on 100M samples from the gallica corpus (already prepared for Experiment 1 - Step 2), limited to 512 tokens windows.
+
+- `docker exec -it kafka python 2e_train_mistral_QLoRA_gallica_512t.py`
+
+<div align="center">
+<img width="500" alt="plot_train_mistral_gallica" src="https://github.com/user-attachments/assets/366477fa-c225-496b-a27b-c6fead39b94d" />
+</div>
+
+<details><summary>🇫🇷</summary>
+
+```txt
+Au bas de l'escalier, à droite du portail d'entrée, une longue échelle, qui poussait les murs de chaque côté, allant jusqu'au premier étage, semblait être faite pour nous conduire au ciel par le moyen d'une fenêtre placée près de la balustrade qui entourait l'étage supérieur. Là-bas, sur un fond noir, et d'un bleu profond, se détachaient de vastes ombres, que la lumière des lampes réfléchissait avec un éclat étrange, sur le mur opposé. Ces ombres étaient en mouvement et se faisaient et s'effaçaient. Au milieu de cette confusion de formes obscures, deux personnes, une femme et un homme, apparaissaient et disparaissaient à l'instant même que nous traversions le carré sombre de la cour intérieure. Nous avons eu de quoi rêver dans ces ombres et dans cette lampe. Cela nous sembla que nous marchions dans les airs et que notre regard suivait l'ombre d'une grande flamme qui se dressait et tombait, se dressait et tombait, tout au haut de la grande salle ; que ces ombres et cette lampe n'étaient que l'image de ce spectacle et que cet étage était le ciel où nous gravions la grande échelle. Quand on a vu autour soi des choses qui semblent avoir de l'intelligence, on s'empresse d'attribuer des idées à ces objets qui ne sont pas pensants. Cette échelle était le moyen de gravir aux étoiles; c'était une voie vers l'immortalité : le cœur sentit, dès ce moment, l'attraction de cet ascendant et, si j'avais été capable de penser, je lui eusse donné une importance bien plus grande que celle que je lui donnerai maintenant. Mais, à cette heure, je savais si peu que je n'y croyais point. Je voyais, mais je ne comprenais rien, moi, qui n'avais que vingt ans. Que serait-il donc devenu de moi si j'avais su, à l'âge où je l'ai vu, ce que je sais aujourd'hui ? Comment trouver un nom pour exprimer ce sentiment d'éternité qui naquit en moi dans cette église de Vincennes ? Quelque chose dans ma nature s'empressa de me faire comprendre que la mort n'existait pas et qu'il fallait vivre sans peur. Dès lors, j'étais, en quelque sorte, un homme. Il y a là un sentiment de grandeur qui dépasse toutes les connaissances et qui fait qu'on peut survivre à la plus grande affliction. A mes yeux, c'est celui que donne la foi dans Dieu, parce que Dieu est l'Éternel. Quand vous avez une idée de l'éternité, vous ne pouvez pas mourir. Dans ce sentiment, l'éternité se manifeste comme l'infini. Et il est bon de croire que l'éternité est une des idées fondamentales de notre âme humaine. La science moderne, qui se trompe sur de nombreuses choses, a pris l'habitude d'expliquer, de toute manière, les sentiments les plus doux de l'humanité par des causes matérielles. L'affection maternalle et paternelle, ainsi que les sentiments de la sociabilité et de l'amitié, sont dus à des excitations chimiques. De même, le besoin de la justice, l'idée du devoir, les notions de l'honneur et de la noblesse, les grandes passions amoureuses, la haine contre l'injustice, toutes les vertus de l'homme sont attribuées à des excitements physiques. Enfin, selon les modernes, tous nos mouvements de conscience sont la conséquence des combinaisons de substances qui agissent ensemble dans les organes de la sensibilité. Si nous rencontr
+```
+</details>
+
+<details><summary>🇬🇧</summary>
+
+```txt
+At the bottom of the staircase, to the right of the entrance gate, a long ladder, pushing the walls on each side and going up to the first floor, seemed made to lead us to heaven by means of a window placed near the balustrade that surrounded the upper floor. Over there, against a black background and a deep blue, vast shadows stood out, which the light of the lamps reflected with a strange brilliance on the opposite wall. These shadows were in movement and formed and vanished. In the middle of this confusion of dark shapes, two people, a woman and a man, appeared and disappeared at the very moment we crossed the dark square of the inner courtyard. We had enough to dream about in those shadows and in that lamp. It seemed to us that we were walking in the air and that our gaze followed the shadow of a great flame which rose and fell, rose and fell, at the very top of the great hall; that these shadows and this lamp were but the image of that spectacle and that this floor was the sky to which we climbed the great ladder.
+
+When one has seen around oneself things that seem to have intelligence, one hastens to attribute ideas to those objects that do not think. This ladder was the means of climbing to the stars; it was a path toward immortality: the heart felt, from that moment, the attraction of that ascent and, if I had been capable of thinking, I would have given it a far greater importance than the one I give it now. But, at that hour, I knew so little that I did not believe in it at all. I saw, but I understood nothing, I, who was only twenty years old. What then would have become of me if I had known, at the age when I saw it, what I know today? How to find a name to express that feeling of eternity which was born in me in that church of Vincennes? Something in my nature hastened to make me understand that death did not exist and that one had to live without fear. From then on, I was, in a way, a man. There is in that a feeling of greatness that surpasses all knowledge and allows one to survive the greatest affliction. In my eyes, it is the one given by faith in God, because God is the Eternal. When you have an idea of eternity, you cannot die. In that feeling, eternity manifests itself as the infinite. And it is good to believe that eternity is one of the fundamental ideas of our human soul.
+
+Modern science, which is mistaken about many things, has taken the habit of explaining, in every possible way, the sweetest feelings of humanity by material causes. Maternal and paternal affection, as well as the sentiments of sociability and friendship, are due to chemical excitations. Likewise, the need for justice, the idea of duty, the notions of honour and nobility, great amorous passions, hatred of injustice—every virtue of man is attributed to physical stimulations. Finally, according to the moderns, all our movements of consciousness are the consequence of combinations of substances acting together in the organs of sensibility. If we meet…
+```
+</details>
+
+### Step 2 - Stylistic imprinting on Kafka
+
+The pre-trained LoRA adapters were then trained on the Kafka target book on the same training material than Experiment 2: 10 epochs with a learning rate up to `lr = 3e-5`.
+
+- `docker exec -it kafka python 2f_train_mistral_kakfa_QLoRA.py`
+
+<div align="center">
+<img width="500" alt="plot_train_mistral_kafka" src="https://github.com/user-attachments/assets/00008f9b-761d-4e49-a41d-d33fdcc8cc8b" />
+</div>
+
+<details><summary>🇫🇷</summary>
+
+```txt
+— Ou est mon père ?
+
+K. se détourna, s’enfonça dans le fauteuil et prit les pieds de son pantoufle à l’endroit du visage de Joseph K. Il vint près de sa tête et lui dit en l’embrassant sur la joue :
+
+— Tu es bien, ma chère fille !
+
+Joseph K. lui répondit en se redressant :
+
+— Je suis le beau-père de votre belle-fille, je ne suis pas ton fils.
+
+K. lui répondit en embrassant sa main :
+
+— C’est une erreur !
+
+— Non, tu te trompes, papa ! dit la mère. — J’ai eu un enfant, il y a quelque temps, qui était mort au bout de quelques jours.
+
+— Et moi, je n’ai jamais été marié.
+
+Elle lui mit le doigt sur la bouche :
+
+— Toi aussi, tu es en erreur, mon chéri ! — Père, disait Joseph K., je n’ai jamais eu d’autre mère que toi !
+
+Il prit sa main et la ramena vers lui, en disant :
+
+— Tu es bien, ma chère fille !
+
+Elles parlèrent un peu ensemble, puis K. sortit de la pièce.
+
+— Ma vieille ! s’écria K., comme cette femme me rend fou !
+
+« *Betrachtung* », in Franz Kafka: Das Schloss (1926)
+```
+</details>
+
+<details><summary>🇬🇧</summary>
+
+```txt
+— “Where is my father?”
+
+K. turned away, sank into the armchair and pressed the feet of his slipper against Joseph K.’s face. He came near his head and said, kissing him on the cheek:
+
+— “You are good, my dear girl!”
+
+Joseph K. answered, straightening up:
+
+— “I am the stepfather of your daughter-in-law, I am not your son.”
+
+K. answered, kissing his hand:
+
+— “It’s a mistake!”
+
+— “No, you’re wrong, papa!” said the mother. “I had a child some time ago who died after a few days.”
+
+— “And I have never been married.”
+
+She put her finger on his mouth:
+
+— “You too are mistaken, my darling!” — “Father,” said Joseph K., “I have never had any other mother than you!”
+
+He took her hand and brought it back toward him, saying:
+
+— “You are good, my dear girl!”
+
+They spoke a little together, then K. left the room.
+
+— “My old dear!” cried K., “how that woman drives me mad!”
+
+“Betrachtung,” in Franz Kafka: Das Schloss (1926)
+```
+</details>
+
+### 📊 Conclusions
+
+The QLoRA pre-training on Gallica (step 1) worked well: the loss was well reduced, reaching a lower point than what could be achieved by any Gallica-trained TinyLlama. All texts generated by Mistral after the French literature aculturation were more consistent than what was generated by TinyLlama. Therefore, the QLoRA approach expressed all its potential in this Experiment 3. This illustrates that for a given VRAM constraint (12 Go in this case) a larger model strongly quantized with fine-tuned adapters may yield a much more qualitative model than a full-weight trained smaller model. However, this should also be nuanced by the fact that Mistral originates from a French lab, and is likely more familiar with the language (its starting loss on Gallica was lower than the reached loss of TinyLlama after Experiment 1 - step 1).
+
+The model showed a surprising resilience when trained on the target resource (step 2), despite a relatively strong learning rate and 10 epochs. The loss variation was erratic, and neither the style nor the story elements ended up imprinted in the generated texts.
