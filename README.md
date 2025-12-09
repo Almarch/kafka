@@ -41,7 +41,8 @@ All the HuggingFace resources are downloaded for local training & use.
 All models generation samples presented in this documentation are obtained using the same process:
 
 - The initial prompt is: `K. ouvrit la porte.` (*K. opened the door.*).
-- The model used q8-quantized. If there are LoRA weights, it is first merged, saved and re-loaded in q8.
+- All models are tested with a q8 quantization.
+- If there are LoRA weights, they are first merged, saved and the model is re-loaded.
 - 500 tokens are generated.
 - The parameters are a temperature of `0.8`, a repetition penalty of `1.1` and top-p of `0.9`.
 - An English translation is provided using ChatGPT, asking for close translation including errors and inconsistencies.
